@@ -5,27 +5,53 @@ CubeState = TypedDict('CubeState', {'corner_position': list[int],
                                     'edge_position': list[int],
                                     'edge_orientation': list[int]})
 
+def parse_color_input(color_input: List[List[str]]) -> List[str]:
+    output = []
+    for i, (ref, cubie) in enumerate(zip(_goal, color_input)):
+        if i < 12:
+            face1 = ref[0]
+            face2 = ref[1]
+            
+            color1 = cubie[_face_to_axis[face1]]
+            color2 = cubie[_face_to_axis[face2]]
+            
+            final_face1 = _color_to_face[color1]
+            final_face2 = _color_to_face[color2]
+            
+            output.append(final_face1 + final_face2)
+        else:
+            face1 = ref[0]
+            face2 = ref[1]
+            face3 = ref[2]
+            
+            color1 = cubie[_face_to_axis[face1]]
+            color2 = cubie[_face_to_axis[face2]]
+            color3 = cubie[_face_to_axis[face3]]
+            
+            final_face1 = _color_to_face[color1]
+            final_face2 = _color_to_face[color2]
+            final_face3 = _color_to_face[color3]
+            
+            output.append(final_face1 + final_face2 + final_face3)
+    return output
+            
 def build_cube_state(scramble: List[str]) -> CubeState:
-    goal = [ "UF", "UR", "UB", "UL", 
-             "DF", "DR", "DB", "DL", 
-             "FR", "FL", "BR", "BL",
-		     "UFR", "URB", "UBL", "ULF", 
-             "DRF", "DFL", "DLB", "DBR" ]
-    
     position = [0] * 20
     orientation = [0] * 20
     
     
     for i, cubie in enumerate(scramble):
-        while cubie not in goal:
+        while cubie not in _goal:
             cubie = cubie[1:] + cubie[0]
             orientation[i] += 1
-        position[i] = goal.index(cubie)
+        position[i] = _goal.index(cubie) if i < 12 else _goal.index(cubie) - 12
     
-    return CubeState({'corner_position': position[:12],
-                      'corner_orientation': orientation[:12],
-                      'edge_position': position[12:],
-                      'edge_orientation': orientation[12:]})
+    return CubeState({'corner_position': position[12:],
+                      'corner_orientation': orientation[12:],
+                      'edge_position': position[:12],
+                      'edge_orientation': orientation[:12],
+                      
+                      })
 
 def inverse_move(move: str) -> str:
         return _inverse_move[move]
@@ -63,7 +89,7 @@ class Cube:
     solved_state = CubeState({'corner_position': [0, 1, 2, 3, 4, 5, 6, 7],
                               'corner_orientation': [0, 0, 0, 0, 0, 0, 0, 0],
                               'edge_position': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-                              'edge_orientation': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0]})
+                              'edge_orientation': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]})
     
     def __init__(self, init_state: CubeState=solved_state):
         self.corner_position = init_state["corner_position"]
@@ -244,6 +270,30 @@ _str_to_turn_tuple = {
     "R'": (5, 1),
     "R2": (5, 2)
 }
+
+_color_to_face = {
+    "blue": "U", 
+    "green": "D",
+    "yellow": "F",
+    "white": "B",
+    "red": "L",
+    "orange": "R"
+}
+
+_face_to_axis = {
+    "U": 1,
+    "D": 1,
+    "F": 2,
+    "B": 2,
+    "L": 0,
+    "R": 0
+}
+
+_goal = [ "UF", "UR", "UB", "UL", 
+             "DF", "DR", "DB", "DL", 
+             "FR", "FL", "BR", "BL",
+		     "UFR", "URB", "UBL", "ULF", 
+             "DRF", "DFL", "DLB", "DBR" ]
         
     
     

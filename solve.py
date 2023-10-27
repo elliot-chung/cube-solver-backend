@@ -3,7 +3,7 @@ from rubikscube import *
 # Bidirectional breadth-first search 
 # Returns a string of moves that solves the cube
 # The cube remains unchanged
-def solve(cube: Cube) -> str:
+def solve(cube: Cube) -> List[str]:
     goal_cube = Cube()
     phase = 0
     
@@ -65,5 +65,5 @@ def solve(cube: Cube) -> str:
                         cube = cube.turn(move)
                     
                     break
-    return " ".join(output)                    
+    return output                   
                         
