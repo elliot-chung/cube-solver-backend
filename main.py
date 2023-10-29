@@ -37,8 +37,18 @@ class MyServer(BaseHTTPRequestHandler):
         
         content_length = int(self.headers['Content-Length'])
         data = json.loads(self.rfile.read(content_length))
-        color_data = parse_color_input(data)
-        cube_state = build_cube_state(color_data)
+        try: 
+            color_data = parse_color_input(data)
+            cube_state = build_cube_state(color_data)
+        except Exception as e:
+            self.send_response(200)
+            self._enable_cors()
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps("Invalid Cube").encode("utf-8"))
+            return
+        
+        
         cube = Cube(cube_state)
         sequence = solve(cube)
         response = json.dumps(sequence)

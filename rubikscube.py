@@ -44,13 +44,14 @@ def build_cube_state(scramble: List[str]) -> CubeState:
         while cubie not in _goal:
             cubie = cubie[1:] + cubie[0]
             orientation[i] += 1
+            if orientation[i] == 3:
+                raise Exception("Invalid scramble")
         position[i] = _goal.index(cubie) if i < 12 else _goal.index(cubie) - 12
     
     return CubeState({'corner_position': position[12:],
                       'corner_orientation': orientation[12:],
                       'edge_position': position[:12],
                       'edge_orientation': orientation[:12],
-                      
                       })
 
 def inverse_move(move: str) -> str:
