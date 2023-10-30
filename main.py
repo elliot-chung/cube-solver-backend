@@ -4,7 +4,7 @@ import json
 from rubikscube import *
 from solve import solve
 
-hostName = "localhost"
+hostName = ""
 serverPort = 8080
 
 class MyServer(BaseHTTPRequestHandler):
