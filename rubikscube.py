@@ -3,7 +3,8 @@ from typing import List, TypedDict
 CubeState = TypedDict('CubeState', {'corner_position': list[int],
                                     'corner_orientation': list[int],
                                     'edge_position': list[int],
-                                    'edge_orientation': list[int]})
+                                    'edge_orientation': list[int],
+                                    'parity': bool})
 
 def parse_color_input(color_input: List[List[str]]) -> List[str]:
     output = []
@@ -48,14 +49,19 @@ def build_cube_state(scramble: List[str]) -> CubeState:
                 raise Exception("Invalid scramble")
         position[i] = _goal.index(cubie) if i < 12 else _goal.index(cubie) - 12
     
+    corner_parity = False
+    for i in range(8):
+        for j in range(i + 1, 8):
+            corner_parity ^= position[12 + i] > position[12 + j]
+    
     return CubeState({'corner_position': position[12:],
                       'corner_orientation': orientation[12:],
                       'edge_position': position[:12],
                       'edge_orientation': orientation[:12],
-                      })
-
+                      'parity': corner_parity})
+                      
 def inverse_move(move: str) -> str:
-        return _inverse_move[move]
+    return _inverse_move[move]
         
 def legal_moves(phase: int) -> list[str]:
     if phase == 2:
@@ -90,7 +96,8 @@ class Cube:
     solved_state = CubeState({'corner_position': [0, 1, 2, 3, 4, 5, 6, 7],
                               'corner_orientation': [0, 0, 0, 0, 0, 0, 0, 0],
                               'edge_position': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-                              'edge_orientation': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]})
+                              'edge_orientation': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                              'parity': False})
     
     def __init__(self, init_state: CubeState=solved_state):
         self.corner_position = init_state["corner_position"]
@@ -98,18 +105,21 @@ class Cube:
         
         self.edge_position = init_state["edge_position"]
         self.edge_orientation = init_state["edge_orientation"]
+        self.parity = init_state["parity"]
     
     def __str__(self) -> str:
         return "Corner Position: " + str(self.corner_position) + "\n" + \
                "Corner Orientation: " + str(self.corner_orientation) + "\n" + \
                "Edge Position: " + str(self.edge_position) + "\n" + \
-               "Edge Orientation: " + str(self.edge_orientation)
+               "Edge Orientation: " + str(self.edge_orientation) + "\n" + \
+               "Parity: " + str(self.parity)
     
     def get_cube_state(self) -> CubeState:
         return CubeState({'corner_position': self.corner_position[:],
                           'corner_orientation': self.corner_orientation[:],
                           'edge_position': self.edge_position[:],
-                          'edge_orientation': self.edge_orientation[:]})
+                          'edge_orientation': self.edge_orientation[:],
+                          'parity': self.parity})
     
     # Each cube permutation can be assigned an id depending on the phase
     # The id is not unique for each permutation, but permutations with matching ids are equivalent
@@ -126,12 +136,9 @@ class Cube:
         elif phase == 3:
             middle_standing_slice_index = int("".join(["10" if edge > 7 else "00" if edge % 2 == 0 else "01" for edge in self.edge_position]), 2)
             corner_pairing_index = int("".join(["{0:03b}".format(corner & 5) for corner in self.corner_position]), 2)
-            corner_parity = False
-            for i in range(8):
-                for j in range(i + 1, 8):
-                    corner_parity ^= self.corner_position[i] > self.corner_position[j]
+            parity = self.parity
                     
-            return str(middle_standing_slice_index) + " " + str(corner_pairing_index) + " " + str(corner_parity)
+            return str(middle_standing_slice_index) + " " + str(corner_pairing_index) + " " + str(parity)
         return " ".join([str(x) for x in self.corner_position + self.corner_orientation + self.edge_position + self.edge_orientation])
     
     def turn(self, turn:str):
@@ -221,6 +228,9 @@ class Cube:
         if face == 2 or face == 3: orientedges(edges, turn)
         if face == 2 or face == 3 or face == 4 or face == 5: orientcorners(corners, turn)
         
+        if turn == 0 or turn == 1:
+            next_cube.parity = not self.parity 
+        
         return next_cube
 
 _face_to_idx = [([0,  1,  2,  3], [0,  1,  2,  3]),
@@ -295,6 +305,8 @@ _goal = [ "UF", "UR", "UB", "UL",
              "FR", "FL", "BR", "BL",
 		     "UFR", "URB", "UBL", "ULF", 
              "DRF", "DFL", "DLB", "DBR" ]
+
+
         
     
     
