@@ -128,15 +128,15 @@ class Cube:
         if phase == 1:
             return str(self.edge_orientation)
         elif phase == 2:
-            id = self.corner_orientation.copy()
+            id = str(self.corner_orientation)
             equitorial_slice_index = str(["a" if edge > 7 else "b" for edge in self.edge_position])
-            return str(id) + " " + equitorial_slice_index
+            return " ".join([str(id), equitorial_slice_index])
         elif phase == 3:
             middle_standing_slice_index = str(["a" if edge > 7 else "b" if edge % 2 == 0 else "c" for edge in self.edge_position])
             corner_pairing_index = str([corner & 5 for corner in self.corner_position])
             parity = str(self.parity)
                     
-            return middle_standing_slice_index + " " + corner_pairing_index + " " + parity
+            return " ".join([middle_standing_slice_index, corner_pairing_index, parity])
         return str([x for x in self.corner_position + self.corner_orientation + self.edge_position + self.edge_orientation])
     
     def turn(self, turn:str):
