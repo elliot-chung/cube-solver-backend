@@ -126,20 +126,18 @@ class Cube:
     # for the subproblem being solved at the given phase        
     def phase_id(self, phase: int) -> str:
         if phase == 1:
-            return str(int("".join([str(edge) for edge in self.edge_orientation]), 2))
+            return str(self.edge_orientation)
         elif phase == 2:
             id = self.corner_orientation.copy()
-            # 12 bit binary number with 4 1s that represent the equitorial slice edges
-            equitorial_slice_index = int("".join(["1" if edge > 7 else "0" for edge in self.edge_position]), 2) 
-            id.append(equitorial_slice_index)
-            return " ".join([str(val) for val in id])
+            equitorial_slice_index = str(["a" if edge > 7 else "b" for edge in self.edge_position])
+            return str(id) + " " + equitorial_slice_index
         elif phase == 3:
-            middle_standing_slice_index = int("".join(["10" if edge > 7 else "00" if edge % 2 == 0 else "01" for edge in self.edge_position]), 2)
-            corner_pairing_index = int("".join(["{0:03b}".format(corner & 5) for corner in self.corner_position]), 2)
-            parity = self.parity
+            middle_standing_slice_index = str(["a" if edge > 7 else "b" if edge % 2 == 0 else "c" for edge in self.edge_position])
+            corner_pairing_index = str([corner & 5 for corner in self.corner_position])
+            parity = str(self.parity)
                     
-            return str(middle_standing_slice_index) + " " + str(corner_pairing_index) + " " + str(parity)
-        return " ".join([str(x) for x in self.corner_position + self.corner_orientation + self.edge_position + self.edge_orientation])
+            return middle_standing_slice_index + " " + corner_pairing_index + " " + parity
+        return str([x for x in self.corner_position + self.corner_orientation + self.edge_position + self.edge_orientation])
     
     def turn(self, turn:str):
         next_cube = Cube(self.get_cube_state())
@@ -147,69 +145,15 @@ class Cube:
         
         # Moves the corners and edges of the cube into position
         def turnface(corners, edges, turn):
-            if turn == 0:
-                next_cube.corner_position[corners[0]] = self.corner_position[corners[1]]
-                next_cube.corner_position[corners[1]] = self.corner_position[corners[2]]
-                next_cube.corner_position[corners[2]] = self.corner_position[corners[3]]
-                next_cube.corner_position[corners[3]] = self.corner_position[corners[0]]
+            for i in range(4):
+                if turn == 0: j = (i + 1) % 4
+                if turn == 1: j = i - 1
+                if turn == 2: j = (i + 2) % 4
                 
-                next_cube.corner_orientation[corners[0]] = self.corner_orientation[corners[1]]
-                next_cube.corner_orientation[corners[1]] = self.corner_orientation[corners[2]]
-                next_cube.corner_orientation[corners[2]] = self.corner_orientation[corners[3]]
-                next_cube.corner_orientation[corners[3]] = self.corner_orientation[corners[0]]
-                
-                next_cube.edge_position[edges[0]] = self.edge_position[edges[1]]
-                next_cube.edge_position[edges[1]] = self.edge_position[edges[2]]
-                next_cube.edge_position[edges[2]] = self.edge_position[edges[3]]
-                next_cube.edge_position[edges[3]] = self.edge_position[edges[0]]
-                
-                next_cube.edge_orientation[edges[0]] = self.edge_orientation[edges[1]]
-                next_cube.edge_orientation[edges[1]] = self.edge_orientation[edges[2]]
-                next_cube.edge_orientation[edges[2]] = self.edge_orientation[edges[3]] 
-                next_cube.edge_orientation[edges[3]] = self.edge_orientation[edges[0]]
-            elif turn == 1:
-                next_cube.corner_position[corners[0]] = self.corner_position[corners[3]]
-                next_cube.corner_position[corners[3]] = self.corner_position[corners[2]]
-                next_cube.corner_position[corners[2]] = self.corner_position[corners[1]]
-                next_cube.corner_position[corners[1]] = self.corner_position[corners[0]]
-                
-                next_cube.corner_orientation[corners[0]] = self.corner_orientation[corners[3]]
-                next_cube.corner_orientation[corners[3]] = self.corner_orientation[corners[2]]
-                next_cube.corner_orientation[corners[2]] = self.corner_orientation[corners[1]]
-                next_cube.corner_orientation[corners[1]] = self.corner_orientation[corners[0]]
-                
-                next_cube.edge_position[edges[0]] = self.edge_position[edges[3]]
-                next_cube.edge_position[edges[3]] = self.edge_position[edges[2]]
-                next_cube.edge_position[edges[2]] = self.edge_position[edges[1]]
-                next_cube.edge_position[edges[1]] = self.edge_position[edges[0]]
-                
-                next_cube.edge_orientation[edges[0]] = self.edge_orientation[edges[3]]
-                next_cube.edge_orientation[edges[3]] = self.edge_orientation[edges[2]]
-                next_cube.edge_orientation[edges[2]] = self.edge_orientation[edges[1]]
-                next_cube.edge_orientation[edges[1]] = self.edge_orientation[edges[0]]
-            elif turn == 2:
-                next_cube.corner_position[corners[0]] = self.corner_position[corners[2]]
-                next_cube.corner_position[corners[2]] = self.corner_position[corners[0]]
-                next_cube.corner_position[corners[1]] = self.corner_position[corners[3]]
-                next_cube.corner_position[corners[3]] = self.corner_position[corners[1]]
-                
-
-                next_cube.corner_orientation[corners[0]] = self.corner_orientation[corners[2]]
-                next_cube.corner_orientation[corners[2]] = self.corner_orientation[corners[0]]
-                next_cube.corner_orientation[corners[1]] = self.corner_orientation[corners[3]]
-                next_cube.corner_orientation[corners[3]] = self.corner_orientation[corners[1]]
-                
-
-                next_cube.edge_position[edges[0]] = self.edge_position[edges[2]]
-                next_cube.edge_position[edges[2]] = self.edge_position[edges[0]]
-                next_cube.edge_position[edges[1]] = self.edge_position[edges[3]]
-                next_cube.edge_position[edges[3]] = self.edge_position[edges[1]]
-                
-
-                next_cube.edge_orientation[edges[0]] = self.edge_orientation[edges[2]]
-                next_cube.edge_orientation[edges[2]] = self.edge_orientation[edges[0]]
-                next_cube.edge_orientation[edges[1]] = self.edge_orientation[edges[3]]
-                next_cube.edge_orientation[edges[3]] = self.edge_orientation[edges[1]]
+                next_cube.corner_position[corners[i]] = self.corner_position[corners[j]]
+                next_cube.corner_orientation[corners[i]] = self.corner_orientation[corners[j]]
+                next_cube.edge_position[edges[i]] = self.edge_position[edges[j]]
+                next_cube.edge_orientation[edges[i]] = self.edge_orientation[edges[j]]  
         def orientedges(edges, turn):
             if turn == 0 or turn == 1:
                 next_cube.edge_orientation[edges[0]] = (next_cube.edge_orientation[edges[0]] + 1) % 2
