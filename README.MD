@@ -1,6 +1,6 @@
-# Rubik's Cube Solver Server - [Link to Frontend Repo](https://github.com/ec-2018/cube-solver-frontend)
+# Rubik's Cube Solver Server - [Link to Interactive Cube](https://cube-solver-frontend.vercel.app/)
 
-The following is python program for solving a rubik's cube. An http server exposes an endpoint that allows a cube configuration to be processed and a sequence of moves will be sent back as a response. The solver uses an implementation of Thistlethwaite's algorithm.
+The following is python program for solving a rubik's cube. An http server exposes an endpoint that allows a cube configuration to be processed and a sequence of moves will be sent back as a response. The solver uses an implementation of Thistlethwaite's algorithm. The corresponding frontend repository can be found [here](https://github.com/ec-2018/cube-solver-frontend)
 
 ## Cube State
 
