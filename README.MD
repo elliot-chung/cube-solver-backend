@@ -28,7 +28,7 @@ corners: [1, 2, 3, 0, 4, 5, 6, 7]
 
 Alongside every permutation of position, each cubie can also occupy the same position in multiple orientations. Each corner cubie can be in up to 3 orientations and each edge cubie can be in up to 2. Again, each cubie is assigned to an index in the vector which changes orientation based on which face is turned.
 
-Edge Orientation
+#### Edge Orientation
 
 One might determine edge orientation by first noticing that any edge cubie that is moved and brought back to its original position in an even number of quarter turns maintains its orientation while a cubie that does the same in an odd number of quarter turns has a flipped orientation. Additionally, moving an edge cubie from one position to another in an even number of quarter turns results in the same ending orientation regardless of the sequence of moves made (the same is true for an odd number of quarter turns). So we could flip the orientation of each associated edge cubie in our orientation vector with each quarter turn but we can simplify even further. Notice how if we exclude the use of any two arbitrary parallel faces, no edge cubie can be moved from its position and returned back in an odd number of moves. This means that if we establish a reference frame by selecting two parallel faces, edge orientation can only be changed by quarter turns on those two faces. This implementation uses the front and back faces for edge orientation.
 
@@ -57,7 +57,7 @@ While the same cubie is in the same position between these two configurations, i
 
 <img src="./images/solved.png" width="200"/> <img src="./images/flippededge.png" width="213"/>
 
-Corner Orientation
+#### Corner Orientation
 
 Determining corner orientation is more complicated given that a corner can occupy a greater number of orientations. To uniquely define each orientation state, notice that by selecting two arbitrary parallel faces, every corner cubie must contain a color from one of the two faces. For example, most Rubik's cubes have the orange and red faces on opposite sides of the cube. Every single corner piece must contain at least one red or one orange side. (Again the choice is arbitrary, so this is also true for the blue/green sides and the yellow/white sides). The side of the cubie that this color occupies directly maps to the three orientations.
 
@@ -134,7 +134,7 @@ Phase 3 ID: ['b', 'c', 'b', 'c', 'b', 'c', 'b', 'c', 'a', 'a', 'a', 'a'] [0, 1, 
 Phase 4 ID: [0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ```
 
-Phase 1
+#### Phase 1
 
 Phase 1 aims to take the cube from G<sub>0</sub> to G<sub>1</sub> which means orienting all the edge pieces. Consequently, the the id for this phase uses the 12 values in the "edge orientation" vector of a cube state. A cube state's edge orientation vector must be all 0s to pass to the next phase.
 
@@ -147,7 +147,7 @@ Parity: True
 Phase 1 ID: [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0]
 ```
 
-Phase 2
+#### Phase 2
 
 Phase 2 takes the cube from G<sub>1</sub> to G<sub>2</sub> which orients the corners and brings the equatorial slice cubies into the equatorial slice (though not necessarily positioned properly). Like phase 1, the entire corner orientation vector is used in this ID.
 
@@ -164,7 +164,7 @@ Parity: False
 Phase 2 ID: [2, 2, 1, 0, 0, 2, 0, 2] ['b', 'a', 'b', 'b', 'b', 'b', 'b', 'a', 'b', 'b', 'a', 'a']
 ```
 
-Phase 3
+#### Phase 3
 
 Phase 3 takes brings the cube from G<sub>2</sub> to G<sub>2</sub> which positions the remaining edge cubies into their respective slices, ensures overall even parity, and, in Thistlethwaite's original algorithm, brings the corners into their proper tetrad whilst fixing the twist of each tetrad. This implementation uses a stricter condition: each corner must be positioned in its proper pair. (The idea comes from [this](https://www.stefan-pochmann.info/spocc/other_stuff/tools/solver_thistlethwaite/solver_thistlethwaite.txt) author)
 
@@ -183,7 +183,7 @@ Parity: True
 Phase 3 ID: ['b', 'b', 'c', 'c', 'b', 'c', 'c', 'b', 'a', 'a', 'a', 'a'] [4, 4, 5, 0, 5, 1, 1, 0] True
 ```
 
-Phase 4
+#### Phase 4
 
 Phase 4 uses the entire cube state as the ID since this phase needs to solve the cube.
 
