@@ -1,10 +1,10 @@
 # Rubik's Cube Solver Server
 
-The following is python program for solving a rubik's cube. An http server exposes an endpoint that allows a cube configuration to be processed and a sequence of moves will be sent back as a response. The solver uses an implementation of Thistlewaite's algorithm based on [Stefan Pochmann's](https://www.stefan-pochmann.info/spocc/other_stuff/tools/solver_thistlethwaite/solver_thistlethwaite.txt) implementation.
+The following is python program for solving a rubik's cube. An http server exposes an endpoint that allows a cube configuration to be processed and a sequence of moves will be sent back as a response. The solver uses an implementation of Thistlethwaite's algorithm.
 
 ## Cube State
 
-An given rubik's cube configuration can be represented by a 40-dimensional vector. This is because a cube contains 20 "cubies" that can change position (center cubies always stay in the same positions in relation to eachother). The first 20 values are used to track the position of each cubie while the final 20 values are used to track their orientation.
+An given rubik's cube configuration can be represented by a 40-dimensional vector. This is because a cube contains 20 "cubies" that can change position (center cubies always stay in the same positions in relation to each other). The first 20 values are used to track the position of each cubie while the final 20 values are used to track their orientation.
 
 ### Position
 
@@ -17,7 +17,7 @@ edges: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 corners: [0, 1, 2, 3, 4, 5, 6, 7]
 ```
 
-Turning a face always rotates 4 indices in each subvector. The result of turning the U face on a solved cube looks like this:
+Turning a face always rotates 4 indices in each sub-vector. The result of turning the U face on a solved cube looks like this:
 
 ```
 edges: [1, 2, 3, 0, 4, 5, 6, 7, 8, 9, 10, 11]
@@ -103,12 +103,112 @@ Edge Orientation: [1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0]
 Parity: True
 ```
 
-## [Thistlewaite's Algorithm](https://www.jaapsch.net/puzzles/thistle.htm)
+<img src="./images/Corners.png" width="200">
+<img src="./images/Edge.png" width="200">
 
-Now that we have a rigorous way of uniquely defining every cube state we can start looking for a solution. Simply put, solution is just a series of face turns that transforms a given scramble cube state into the solved cube state. To do this, cube-solving algorithms tend to represent cube states as the nodes of a graph with each type of turn corresponding to the connections between nodes. Unfortunately, a simple graph search algorithm such as DFS or BFS cannot find a solution a feasible time since a Rubik's cube can occupy 43,252,003,274,489,856,000 unique states and each state branches 18 times. Finding an optimal route through this graph can take many hours even on modern hardware and it still requires pre-computed tables to act as a heuristic for A\* search [(Korf's Algorithm)](https://www.cs.princeton.edu/courses/archive/fall06/cos402/papers/korfrubik.pdf). Thistlewaite's algorithm sacrifices finding the optimal route for much faster calculation speeds. It does this by breaking down the search into sub-problems that search over smaller spaces. It does this by first defining five groups (G<sub>0</sub>, G<sub>1</sub>, G<sub>2</sub>, G<sub>3</sub>, G<sub>4</sub>) that progressively place cubies into their proper orientation then position. Each group is a subgroup of the one that precedes it so the properties of all previous groups apply to any group further down the line.
+## [Thistlethwaite's Algorithm](https://www.jaapsch.net/puzzles/thistle.htm)
+
+Now that we have a rigorous way of uniquely defining every cube state we can start looking for a solution. Simply put, solution is just a series of face turns that transforms a given scramble cube state into the solved cube state. To do this, cube-solving algorithms tend to represent cube states as the nodes of a graph with each type of turn corresponding to the connections between nodes. Unfortunately, a simple graph search algorithm such as DFS or BFS cannot find a solution a feasible time since a Rubik's cube can occupy 43,252,003,274,489,856,000 unique states and each state branches 18 times. Finding an optimal route through this graph can take many hours even on modern hardware and it still requires pre-computed tables to act as a heuristic for A\* search [(Korf's Algorithm)](https://www.cs.princeton.edu/courses/archive/fall06/cos402/papers/korfrubik.pdf). Thistlethwaite's algorithm sacrifices finding the optimal route for much faster calculation speeds. It does this by breaking down the search into sub-problems that search over smaller spaces. It starts by defining five groups (G<sub>0</sub>, G<sub>1</sub>, G<sub>2</sub>, G<sub>3</sub>, G<sub>4</sub>) that progressively place cubies into their proper orientation then position. Each group is a subgroup of the one that precedes it so the properties of all previous groups apply to any group further down the line.
 
 G<sub>0</sub> - All legal cube states \
 G<sub>1</sub> - All cube states with correctly oriented edges \
-G<sub>2</sub> - All cube states with correctly oriented corners and the equatorial slice edges positioned within the equitorial slice \
-G<sub>3</sub> - All the cube states with the middle and standing slice edge cubies positioned within their respective slices as well as each corner positioned within its respective tetrad (more below)\
+G<sub>2</sub> - All cube states with correctly oriented corners and the equatorial slice edges positioned within the equatorial slice \
+G<sub>3</sub> - All the cube states with the middle and standing slice edge cubies positioned within their respective slices as well as each corner positioned within its respective tetrad and overall even parity (more below)\
 G<sub>4</sub> - The solved states
+
+After a cube is brought into a group, the moves that would take the cube out of that group are made illegal for the remainder of the algorithm.
+
+G<sub>0</sub> - All moves are legal \
+G<sub>1</sub> - Quarter turns on front and back faces are removed because (in the selected reference frame) edge orientation can only be changed on those faces. \
+G<sub>2</sub> - Quarter turns on the left and rights faces are removed because this mean corner orientation can no longer be changed. Also, since only half turns are allowed on the front, back, left, and right faces, the edge cubies in the equatorial slice can never leave the slice. \
+G<sub>3</sub> - Quarter turns on the up and down faces are removed because with only half turns across the whole cube, corners can no longer switch tetrads and no edge piece can leave its slice. \
+G<sub>4</sub> - Done
+
+### Phases and IDs
+
+The algorithm operates in 4 phases that take the cube from group to group. To do this, an ID is assigned to a given cube state that's based on the critical information associated with that phase. This ID is in the form of a string and is used as a node's identifier during graph search. (Cube states are added python dict with their ID as a name for constant time retrieval)
+
+In all but the final phase, the ID is comprised of incomplete parts of the cube-state vector meaning that each ID is not unique; many cube states will map to the same ID depending on the phase. Crucially though, all cube states that share an ID with the solved state also belong in the next group.
+
+The following are the IDs of the solved state at each phase:
+
+```
+Phase 1 ID: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Phase 2 ID: [0, 0, 0, 0, 0, 0, 0, 0] ['b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'a', 'a', 'a', 'a']
+Phase 3 ID: ['b', 'c', 'b', 'c', 'b', 'c', 'b', 'c', 'a', 'a', 'a', 'a'] [0, 1, 0, 1, 4, 5, 4, 5] False
+Phase 4 ID: [0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+```
+
+Phase 1
+
+Phase 1 aims to take the cube from G<sub>0</sub> to G<sub>1</sub> which means orienting all the edge pieces. Consequently, the the id for this phase uses the 12 values in the "edge orientation" vector of a cube state. A cube state's edge orientation vector must be all 0s to pass to the next phase.
+
+```
+Corner Position: [5, 7, 1, 0, 3, 4, 6, 2]
+Corner Orientation: [2, 2, 2, 0, 0, 1, 0, 2]
+Edge Position: [9, 11, 7, 10, 3, 4, 8, 0, 1, 6, 2, 5]
+Edge Orientation: [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0]
+Parity: True
+Phase 1 ID: [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0]
+```
+
+Phase 2
+
+Phase 2 takes the cube from G<sub>1</sub> to G<sub>2</sub> which orients the corners and brings the equatorial slice cubies into the equatorial slice (though not necessarily positioned properly). Like phase 1, the entire corner orientation vector is used in this ID.
+
+Additionally, since the four equatorial cubies need to be positioned with the equatorial slice, the positioning vector is used in the ID as well. But the entire positioning vector cannot be used without modification since we don't need an exact match in position. To do this, the 12 values of the edge positioning vector gets converted into two symbols. Each of the values in the position vector that belong in the equatorial slice are encoded as an "a" and the rest of the positions are encoded as "b". Cube states that share IDs have members of the equatorial slice in congruent positions.
+
+Both these parts are composed together to make the full ID.
+
+```
+Corner Position: [1, 4, 7, 6, 3, 5, 2, 0]
+Corner Orientation: [2, 2, 1, 0, 0, 2, 0, 2]
+Edge Position: [7, 10, 6, 0, 3, 4, 2, 11, 1, 5, 9, 8]
+Edge Orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Parity: False
+Phase 2 ID: [2, 2, 1, 0, 0, 2, 0, 2] ['b', 'a', 'b', 'b', 'b', 'b', 'b', 'a', 'b', 'b', 'a', 'a']
+```
+
+Phase 3
+
+Phase 3 takes brings the cube from G<sub>2</sub> to G<sub>2</sub> which positions the remaining edge cubies into their respective slices, ensures overall even parity, and, in Thistlethwaite's original algorithm, brings the corners into their proper tetrad whilst fixing the twist of each tetrad. This implementation uses a stricter condition: each corner must be positioned in its proper pair. (The idea comes from [this](https://www.stefan-pochmann.info/spocc/other_stuff/tools/solver_thistlethwaite/solver_thistlethwaite.txt) author)
+
+The edges being positioned in the correct slices is reflected by a converted edge position vector like we did with in phase 2. This time though, while the equatorial cubies are still encoded as "a", the middle slice cubies are encoded as "b" and the standing slice cubies are encoded as "c".
+
+The four correct corner pairings are (0, 2) (1, 3) (4, 6) (5, 7). Using this, we convert the corner position vector such that each element is represented by 1 of 4 unique symbols that each correspond with a specific corner pairing.
+
+Finally, the overall cube parity is composed with the other two indexes to create the final ID.
+
+```
+Corner Position: [4, 6, 7, 2, 5, 1, 3, 0]
+Corner Orientation: [0, 0, 0, 0, 0, 0, 0, 0]
+Edge Position: [2, 0, 5, 7, 6, 1, 3, 4, 10, 11, 9, 8]
+Edge Orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Parity: True
+Phase 3 ID: ['b', 'b', 'c', 'c', 'b', 'c', 'c', 'b', 'a', 'a', 'a', 'a'] [4, 4, 5, 0, 5, 1, 1, 0] True
+```
+
+Phase 4
+
+Phase 4 uses the entire cube state as the ID since this phase needs to solve the cube.
+
+```
+Corner Position: [2, 3, 0, 1, 6, 7, 4, 5]
+Corner Orientation: [0, 0, 0, 0, 0, 0, 0, 0]
+Edge Position: [0, 7, 2, 1, 6, 3, 4, 5, 9, 8, 11, 10]
+Edge Orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Parity: False
+Phase 4 ID: [2, 3, 0, 1, 6, 7, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 2, 1, 6, 3, 4, 5, 9, 8, 11, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+```
+
+### Solving
+
+At each phase, the cube is assigned its phase ID. This ID value is compared to the solved ID value and if it matches, the phase is skipped. Otherwise, graph search is started between the two IDs. Again, every legal move (according to the phase) represents travel between nodes of the graph and each node is identified by an ID. Keeping this in mind, a BFS style search algorithm can find the shortest path between groups which translates to a sequence of moves that takes a cube from one group to another. Since the final group contains only the solved cube, this sequence of moves is our solution.
+
+# Helpful Resources
+
+[Morwen Thistlethwaite's Own Explanation](https://www.jaapsch.net/puzzles/thistle.htm)
+
+[Helpful Textbook on Permutation Puzzles and Cubology](https://www.sfu.ca/~jtmulhol/math302/notes/302notes-May07-2012.pdf)
+
+[Concise C++ Implementation](https://www.stefan-pochmann.info/spocc/other_stuff/tools/solver_thistlethwaite/solver_thistlethwaite_cpp.txt)
