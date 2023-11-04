@@ -55,8 +55,7 @@ edge_orientation: [1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0]
 
 While the same cubie is in the same position between these two configurations, its orientation is flipped.
 
-<img src="./images/solved.png" width="200">
-<img src="./images/flippededge.png" width="213">
+<img src="./images/solved.png" width="200"/> <img src="./images/flippededge.png" width="213"/>
 
 Corner Orientation
 
@@ -70,10 +69,7 @@ The third image shows a counter-clockwise -1 rotation resulting in orientation 2
 
 The fourth image depicts an orientation 0 corner because the orange face lies opposite the red face and the orange facet of the critical cubie is aligned with the red face.
 
-<img src="./images/solved.png" width="200">
-<img src="./images/cwcorner.png" width="222">
-<img src="./images/ccwcorner.png" width="222">
-<img src="./images/othercolorcorner.png" width="195">
+<img src="./images/solved.png" width="200"/> <img src="./images/cwcorner.png" width="222"/> <img src="./images/ccwcorner.png" width="222"/> <img src="./images/othercolorcorner.png" width="195"/>
 
 We can then notice that under these rules, the orientation of a cubie cannot change by turning either the red or orange sides because turns of this face don't change the positional relationship between the critical facet and the selected face. It also works out that turning any other side changes the orientation of 2 diagonal corner cubies by +1 and the other two by -1.
 
@@ -103,8 +99,7 @@ Edge Orientation: [1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0]
 Parity: True
 ```
 
-<img src="./images/Corners.png" width="200">
-<img src="./images/Edge.png" width="200">
+<img src="./images/Corners.png" width="200"/> <img src="./images/Edge.png" width="200"/>
 
 ## [Thistlethwaite's Algorithm](https://www.jaapsch.net/puzzles/thistle.htm)
 
